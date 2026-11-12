@@ -23,7 +23,7 @@ Install methods:
 
 | Signal in repo | Skill | Install | Why |
 |---|---|---|---|
-| Frontend (react/vue/svelte/next, `*.css`, Tailwind) | `impeccable` or `ui-ux-pro-max` | plugin | Design critique, accessibility, responsive checks. |
+| Frontend (react/vue/svelte/next, `*.css`, Tailwind) | `impeccable` | plugin | Design critique, accessibility, responsive checks. |
 | Charts/dashboards in code | `dataviz` | built-in | Consistent, accessible chart colors and forms. |
 | `anthropic` / `@anthropic-ai/sdk` dependency | `claude-api` | built-in | Current model IDs, caching, tool use. |
 | `posthog` / `posthog-js` dependency | `posthog:*` (e.g. `instrument-product-analytics`, `instrument-error-tracking`) | plugin | Correct instrumentation patterns. |
@@ -43,4 +43,4 @@ Install methods:
   access; say so when offering it.
 - Skills that live only in one developer's `~/.claude/skills` cannot be relied on by teammates.
   Either vendor them into the repo (if licensing allows) or list them as optional in `CLAUDE.md`.
-- Prefer one good skill per job over overlapping ones (e.g. pick `impeccable` *or* `ui-ux-pro-max`).
+- Prefer one good skill per job over overlapping ones; this catalog lists one per signal on purpose.
