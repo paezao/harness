@@ -1,0 +1,11 @@
+{
+  "name": "paezao",
+  "owner": { "name": "paezao" },
+  "plugins": [
+    {
+      "name": "harness",
+      "source": "./",
+      "description": "Set up or audit a project-specific Claude Code harness with sensible defaults."
+    }
+  ]
+}

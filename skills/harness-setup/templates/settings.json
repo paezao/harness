@@ -1,0 +1,40 @@
+{
+  "extraKnownMarketplaces": {
+    "paezao": {
+      "source": { "source": "github", "repo": "paezao/harness" }
+    }
+  },
+  "enabledPlugins": {
+    "harness@paezao": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/harness/verify.sh)",
+      "{{ALLOW_RULES}}"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "{{DENY_RULES}}"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.sh\"" },
+          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/commit-gate.sh\"" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/format-on-edit.sh\"" }
+        ]
+      }
+    ]
+  }
+}

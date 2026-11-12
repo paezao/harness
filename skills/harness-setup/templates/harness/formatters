@@ -1,0 +1,4 @@
+# <comma-separated globs> <command>   - the edited file path is appended as the last argument.
+# Only list formatters this project already uses. Examples:
+# *.ts,*.tsx,*.js,*.jsx,*.json,*.css,*.md   npx --no-install prettier --write
+# *.py                                      uv run ruff format

@@ -1,0 +1,6 @@
+# Acceptance commands: one per line, run in order by verify.sh, stop at first failure.
+# Keep this fast (< ~2 min). Slow suites belong in CI.
+{{FORMAT_CHECK_CMD}}
+{{LINT_CMD}}
+{{TYPECHECK_CMD}}
+{{TEST_CMD}}
