@@ -99,8 +99,8 @@ Rules for generating:
   If `AGENTS.md` exists and other tools use it, make `CLAUDE.md` import it (`@AGENTS.md`) instead of duplicating.
 - **Register the plugin.** `settings.json` carries `extraKnownMarketplaces` and `enabledPlugins`
   for `harness`, so every teammate who opens the repo is prompted to install it (and gets
-  `/harness-setup` for audits). The plugin repo is private: keep that block only in repos whose
-  contributors have access to it, and leave it out of public or open-source repos.
+  `/harness-setup` for audits). Ask before adding it: some teams don't want contributors prompted to
+  install a plugin. If this plugin was installed from a fork, point the block at that fork's repo.
 - **Tailor `/mock` to the stack.** In `skills/mock/SKILL.md`, keep only the table rows that apply and
   name the mocking tools the repo already has (MSW, Storybook, a fake provider, a debug scene, a
   feature-flag helper). If it has none, say which existing mechanism hides unfinished work.

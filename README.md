@@ -52,8 +52,6 @@ What it is **not**:
 
 ## Install
 
-You need read access to the repo (your normal GitHub credentials are used).
-
 ```bash
 /plugin marketplace add paezao/harness
 /plugin install harness@paezao
@@ -199,8 +197,13 @@ Profiles: `light`, `standard` (default), `strict`. See [SKILL.md](skills/harness
   audit checklist.
 - **Stack detection:** [detection.md](skills/harness-setup/references/detection.md).
 - **Templates:** everything copied into projects is under `skills/harness-setup/templates/`.
+- **Your own fork:** to keep a team catalog, fork this repo, edit it, and change the marketplace repo in
+  [templates/settings.json](skills/harness-setup/templates/settings.json) to your fork.
 
-## Changing the harness
+## Contributing
+
+Issues and pull requests are welcome. Keep changes small and say what problem they solve; for a new
+practice, include where it helped in a real project.
 
 1. Edit the templates or references.
 2. Run the template tests: `bash tests/run.sh` (CI runs them on Linux and Windows on every push).
@@ -210,3 +213,7 @@ Profiles: `light`, `standard` (default), `strict`. See [SKILL.md](skills/harness
 ## Requirements
 
 `bash` and `git` (on Windows, the Git Bash that Claude Code already uses). No `jq`, Node or Python needed.
+
+## License
+
+[MIT](LICENSE)
