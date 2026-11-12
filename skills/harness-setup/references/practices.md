@@ -29,6 +29,19 @@ What keeps mocks from being throwaway work:
 
 Skip it for bug fixes and features whose shape is already clear.
 
+## 1c. A design system you can look at
+
+Any project with a UI builds its visuals as a design system - tokens (colour, type, spacing, radius,
+motion) and components built only from them - and keeps a **gallery** that renders all of it in one
+place a person can open: Storybook, a dev-only `/gallery` route, or a debug scene in a game.
+
+- **Everything visual lands in the gallery.** Each token, and each component in every state and every
+  theme. A component that isn't in the gallery isn't done.
+- **Screens are built from gallery pieces.** A one-off value in a screen is a missing token or component.
+- **Review happens there.** The developer, the designer and the design-skeptic all judge visual work
+  in the gallery, so there is always one URL to open instead of clicking through the app.
+- **No gallery yet?** The first visual task sets it up, with the existing tokens and components.
+
 ## 2. Contract before code
 
 For anything touching more than one or two files, write a task contract first
@@ -146,3 +159,5 @@ Use this in audit mode; report each as pass / fail / n.a. with one line of evide
 8. Acceptance commands are deterministic (re-run twice; same result).
 9. Durable state on disk: decisions ledger present and recently used.
 10. Failure loop exists (`/learn`), and `.claude/rules/` has no stale or contradictory rules.
+11. Projects with a UI have a design-system gallery that builds and opens, and covers the tokens and
+    components in use (n.a. without a UI).

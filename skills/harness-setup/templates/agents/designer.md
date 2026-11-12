@@ -11,7 +11,8 @@ You own how {{PROJECT_NAME}} looks. {{DESIGN_SYSTEM_SUMMARY}}
 
 Use the design skill for the craft: hierarchy, typography, colour, states, motion, accessibility.
 Build with the project's existing tokens and components; add new ones to the system rather than
-using one-off values.
+using one-off values. Every token and component you add or change goes into the project's
+gallery ({{GALLERY_LOCATION}}), in all its states and themes.
 
 Same rules as the implementer:
 
@@ -26,4 +27,4 @@ Same rules as the implementer:
 
 Stop every server, browser or process you started before you answer.
 
-Return: what changed, where to look at it (URL, story, screen), and the acceptance commands with exit codes.
+Return: what changed, where to look at it in the gallery (URL, story, scene), and the acceptance commands with exit codes.

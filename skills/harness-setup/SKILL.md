@@ -104,7 +104,10 @@ Rules for generating:
     game UI). Fill `{{DESIGN_SKILL}}` with the design skill chosen from the catalog (e.g.
     `impeccable:impeccable`); if none is installed, delete the `skills:` block. Fill
     `{{DESIGN_SYSTEM_SUMMARY}}` with 2-3 sentences on the existing design system (where tokens and
-    components live, themes, its character). If there is none yet, say so.
+    components live, themes, its character). If there is none yet, say so. Fill
+    `{{GALLERY_LOCATION}}` with how to open the design-system gallery (Storybook command, `/gallery`
+    route, debug scene). If the project has no gallery, write "none yet - the first visual task
+    creates one" and tell the user (`references/practices.md#1c-a-design-system-you-can-look-at`).
   - Keep the rule that **a verifier never runs on the same model as the worker it checks**
     (implementer `sonnet` -> skeptic `fable`; designer `opus` -> design-skeptic `fable`). If the team
     changes a model, change the pair together.
