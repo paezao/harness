@@ -105,7 +105,7 @@ everything. Defaults (change freely, but change worker/verifier pairs together):
 | Implementer | `implementer` | Sonnet · medium | Executes one code contract |
 | Designer | `designer` | Opus · medium + design skill | Executes one visual contract |
 | Checker | `checker` | Haiku · low | Runs `verify.sh`, reports only failures |
-| Skeptic | `skeptic` | Fable · high | Tries to break a finished code diff |
+| Skeptic | `skeptic` | Fable · high + security skill | Tries to break a finished code diff, security included |
 | Design skeptic | `design-skeptic` | Fable · high + design skill | Same for visual work: themes, states, contrast, consistency |
 | Gatekeeper | hooks | no model | Guard, format-on-edit and commit gate on every tool call |
 

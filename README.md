@@ -103,7 +103,7 @@ each on the model that suits the job. The one that checks the work is never the 
 | Build | `implementer` | Sonnet | Code changes, strictly inside the contract |
 | Build | `designer` | Opus | Anything visual (only in projects with a UI) |
 | Check | `checker` | Haiku | Runs tests and linters, reports only failures |
-| Check | `skeptic` | Fable | Tries to break code changes |
+| Check | `skeptic` | Fable | Tries to break code changes, including a security review of each diff |
 | Check | `design-skeptic` | Fable | Tries to break visual changes: themes, states, contrast |
 | Any time | `explorer` | Haiku | "Where/how does this repo do X?" |
 | Any time | `researcher` | Sonnet | Docs, APIs, library versions, with sources |

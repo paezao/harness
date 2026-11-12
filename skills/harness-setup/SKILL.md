@@ -113,6 +113,8 @@ Rules for generating:
     `{{GALLERY_LOCATION}}` with how to open the design-system gallery (Storybook command, `/gallery`
     route, debug scene). If the project has no gallery, write "none yet - the first visual task
     creates one" and tell the user (`references/practices.md#1c-a-design-system-you-can-look-at`).
+  - Fill `{{SECURITY_SKILL}}` in `skeptic` with the installed security skill (`security-audit` from the
+    catalog). If none is installed, delete the `skills:` block; the skeptic still checks security by hand.
   - Keep the rule that **a verifier never runs on the same model as the worker it checks**
     (implementer `sonnet` -> skeptic `fable`; designer `opus` -> design-skeptic `fable`). If the team
     changes a model, change the pair together.

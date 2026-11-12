@@ -4,6 +4,18 @@ Each installed harness records its version in `.claude/harness/VERSION`. Audit m
 applies the **Upgrade** steps of every newer entry below, oldest first, showing a diff for any file
 the team has edited.
 
+## 0.3.0
+
+- Cloudflare's `security-audit` skill is in the recommended catalog (always offered), replacing the
+  built-in `/security-review` as the default security tool.
+- The `skeptic` loads the security skill and runs a focused security review of every diff.
+
+**Upgrade** from 0.2.0:
+1. Offer to install `security-audit` (see the catalog).
+2. In `.claude/agents/skeptic.md`, add the `skills:` block with the security skill and replace the
+   "Risk" check with the "Security" and "Risk" checks from the template, keeping local edits.
+3. Write `.claude/harness/VERSION`.
+
 ## 0.2.0
 
 - Design system with a gallery: UI projects keep every token and component in a gallery people can open

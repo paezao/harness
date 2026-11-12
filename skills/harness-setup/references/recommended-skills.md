@@ -8,6 +8,8 @@ Install methods:
 - **plugin** - `/plugin install <name>@<marketplace>`; add to `.claude/settings.json` `enabledPlugins`
   so teammates get prompted for it.
 - **vendor** - copy the skill folder into the project's `.claude/skills/`.
+- **skills CLI** - `npx skills add <repo url> --skill <name>`, choosing Claude Code as the agent; commit
+  the installed skill folder so teammates get it too (add `--global` for a user-level install instead).
 
 ## Always
 
@@ -15,7 +17,7 @@ Install methods:
 |---|---|---|
 | `/code-review` | built-in | Bug-focused review of the current diff; complements `skeptic`. |
 | `/simplify` | built-in | Cleanup pass for reuse and simplification before shipping. |
-| `/security-review` | built-in | Security pass on the pending changes. |
+| `security-audit` ([cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), MIT) | skills CLI | Security lens for the `skeptic` on every review, and a full multi-phase audit with verified findings when someone asks for one. If it can't be installed, use the built-in `/security-review` instead. |
 | `/fewer-permission-prompts` | built-in | After a week of use, turns common read-only calls into allow rules. |
 | `/run` | built-in | Launch the app and see a change working, not just tests passing. |
 
