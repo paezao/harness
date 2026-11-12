@@ -1,6 +1,6 @@
 {
   "name": "harness",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Set up or audit a project-specific Claude Code harness: CLAUDE.md index, permissions, hooks, verify receipts, commit gate, skeptic reviewer, task contracts and a learn loop.",
   "author": { "name": "paezao" }
 }

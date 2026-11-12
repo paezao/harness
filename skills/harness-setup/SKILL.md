@@ -18,6 +18,9 @@ the first install so you can explain choices to the developer.
 - **Audit / upgrade**: `.claude/harness/` exists, or the user says "audit". Run the checklist in
   `references/practices.md#audit-checklist`, report pass/fail per item, then offer to fix the gaps
   using the same steps below. Never regenerate files the team has edited without showing a diff.
+  Read `.claude/harness/VERSION` (missing means 0.1.0) and compare it with this plugin's version in
+  `../../.claude-plugin/plugin.json` (relative to this skill); if older, apply the **Upgrade** steps of each newer entry in
+  `../../CHANGELOG.md`, oldest first.
 
 ## Step 1 - Inspect the project (no questions yet)
 
@@ -73,6 +76,7 @@ CLAUDE.md                        # short index (templates/CLAUDE.md), <= ~80 lin
     acceptance                   # one command per line, run in order
     formatters                   # glob -> formatter command, used by format-on-edit
     lib.sh  verify.sh
+    VERSION                      # harness version this project is on (from plugin.json)
   hooks/
     guard.sh  commit-gate.sh  format-on-edit.sh
   agents/                        # roles, see "Agents" below
@@ -84,6 +88,7 @@ CLAUDE.md                        # short index (templates/CLAUDE.md), <= ~80 lin
   contracts/TEMPLATE.md          # task contracts (instances are gitignored)
   state/decisions.md             # decision ledger (committed)
   receipts/                      # verify output (gitignored)
+.github/workflows/harness-verify.yml   # templates/ci/harness-verify.yml (standard: offered; strict: yes)
 ```
 
 Rules for generating:
@@ -120,6 +125,16 @@ Rules for generating:
 - **Deny secrets** found in step 1 with `Read(...)` deny rules. Note that `Read(./.env.*)` also hides
   `.env.example`; add an explicit allow for it if the project relies on it.
 - Fill `formatters` only with formatters the project already uses. Empty is fine.
+- **Screenshot tests.** If the project has a gallery and a screenshot tool (Storybook test runner,
+  Playwright, a scene capture script), put its command in `acceptance` when it runs in about a minute,
+  otherwise only in CI. If the gallery has no screenshot tests yet, say so and suggest them as the next
+  visual task; don't invent a command.
+- **CI.** In `strict`, and in `standard` if the developer accepts, write `templates/ci/harness-verify.yml`
+  to `.github/workflows/`. Fill `{{DEFAULT_BRANCH}}`, `{{INSTALL_CMD}}`, and `{{SETUP_STEPS}}` with the
+  runtime setup the project's existing CI uses (e.g. `actions/setup-node` with its version), or remove
+  the placeholder line. If the project already has CI, add a `bash .claude/harness/verify.sh` step to it
+  instead. Not on GitHub? Give the developer the same steps for their CI.
+- Fill `{{HARNESS_VERSION}}` in `.claude/harness/VERSION` with the `version` from `../../.claude-plugin/plugin.json`.
 - Append to `.gitignore`: `.claude/receipts/`, `.claude/contracts/*.md` with `!.claude/contracts/TEMPLATE.md`,
   and `.claude/settings.local.json`.
 - Append to `.gitattributes`: `*.sh text eol=lf` and `.claude/harness/* text eol=lf`. Without it, Windows

@@ -12,7 +12,8 @@ You own how {{PROJECT_NAME}} looks. {{DESIGN_SYSTEM_SUMMARY}}
 Use the design skill for the craft: hierarchy, typography, colour, states, motion, accessibility.
 Build with the project's existing tokens and components; add new ones to the system rather than
 using one-off values. Every token and component you add or change goes into the project's
-gallery ({{GALLERY_LOCATION}}), in all its states and themes.
+gallery ({{GALLERY_LOCATION}}), in all its states and themes, with a screenshot baseline.
+Update a baseline only for a change the contract asks for, and list every updated baseline in your report.
 
 Same rules as the implementer:
 

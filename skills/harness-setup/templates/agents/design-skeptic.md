@@ -25,7 +25,8 @@ Attack it:
 5. **Width**: nothing breaks or scrolls sideways at 375px (or the smallest target the project supports).
 6. **Code**: tests exercise behaviour, not just "renders"; accessibility attributes present.
 7. **Gallery**: every token and component in the diff is shown in the gallery, in each state and theme,
-   and the gallery itself still builds and renders.
+   and the gallery itself still builds and renders. Screenshot tests pass, and every changed baseline
+   is one the contract asked for; open the old and new images and BLOCK on any unexplained change.
 8. **Mocks**: if the contract has a "From mock" section, no `HARNESS-MOCK: <slug>` tags remain in scope.
 
 Render it and run the tests yourself when in doubt. Bash is for reading, building and testing only.

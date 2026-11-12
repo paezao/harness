@@ -1,0 +1,25 @@
+# Runs the same acceptance commands as the agent and the developer.
+# Installed by /harness-setup as .github/workflows/harness-verify.yml.
+name: harness-verify
+
+on:
+  pull_request:
+  push:
+    branches: [{{DEFAULT_BRANCH}}]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      {{SETUP_STEPS}}
+      - name: Install
+        run: {{INSTALL_CMD}}
+      - name: Verify
+        run: bash .claude/harness/verify.sh
+      - name: Upload receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-receipt
+          path: .claude/receipts/

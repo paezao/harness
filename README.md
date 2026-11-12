@@ -186,6 +186,8 @@ Purple steps are skills, red diamonds are gates that block on failure, dashed li
 | `.claude/skills/{mock,contract,ship,learn}` | `/mock` to explore, `/contract` before work, `/ship` to finish, `/learn` after mistakes |
 | `.claude/mocks/` | Mock notes: decisions, settled interfaces, what is still faked |
 | `.claude/rules/`, `.claude/state/decisions.md` | Topic rules and the why behind them |
+| `.claude/harness/VERSION` | Which harness version the project is on, so audits know what to upgrade |
+| `.github/workflows/harness-verify.yml` | Optional CI job running the same `verify.sh` on pull requests |
 
 Profiles: `light`, `standard` (default), `strict`. See [SKILL.md](skills/harness-setup/SKILL.md).
 
@@ -194,9 +196,16 @@ Profiles: `light`, `standard` (default), `strict`. See [SKILL.md](skills/harness
 - **Recommended skills:** edit [recommended-skills.md](skills/harness-setup/references/recommended-skills.md).
   This is the team's curated catalog; the setup skill offers entries whose signals match the repo.
 - **Practices:** [practices.md](skills/harness-setup/references/practices.md) is the rationale and the
-  10-point audit checklist.
+  audit checklist.
 - **Stack detection:** [detection.md](skills/harness-setup/references/detection.md).
 - **Templates:** everything copied into projects is under `skills/harness-setup/templates/`.
+
+## Changing the harness
+
+1. Edit the templates or references.
+2. Run the template tests: `bash tests/run.sh` (CI runs them on Linux and Windows on every push).
+3. Bump `version` in [.claude-plugin/plugin.json](.claude-plugin/plugin.json) and add a
+   [CHANGELOG.md](CHANGELOG.md) entry with **Upgrade** steps, so audits can bring existing projects forward.
 
 ## Requirements
 

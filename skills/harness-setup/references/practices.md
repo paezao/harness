@@ -40,7 +40,15 @@ place a person can open: Storybook, a dev-only `/gallery` route, or a debug scen
 - **Screens are built from gallery pieces.** A one-off value in a screen is a missing token or component.
 - **Review happens there.** The developer, the designer and the design-skeptic all judge visual work
   in the gallery, so there is always one URL to open instead of clicking through the app.
-- **No gallery yet?** The first visual task sets it up, with the existing tokens and components.
+- **The gallery is also the visual test suite.** Each entry has a baseline screenshot, compared on every
+  run: Storybook's test runner or Playwright `toHaveScreenshot` against the stories or `/gallery` route,
+  or a scripted capture of the debug scene in a game. A changed screenshot fails until someone looks at
+  it and accepts the new baseline, so a visual regression is caught by a command, not by a reviewer's eye.
+  Keep it deterministic: fixed viewport, bundled fonts, animations off, and baselines made in the same
+  OS image CI uses (usually a container), since font rendering differs between machines.
+  If it takes more than a minute or so, run it in CI rather than in `acceptance`.
+- **No gallery yet?** The first visual task sets it up, with the existing tokens and components,
+  and its screenshot baselines.
 
 ## 2. Contract before code
 
@@ -159,5 +167,7 @@ Use this in audit mode; report each as pass / fail / n.a. with one line of evide
 8. Acceptance commands are deterministic (re-run twice; same result).
 9. Durable state on disk: decisions ledger present and recently used.
 10. Failure loop exists (`/learn`), and `.claude/rules/` has no stale or contradictory rules.
-11. Projects with a UI have a design-system gallery that builds and opens, and covers the tokens and
-    components in use (n.a. without a UI).
+11. Projects with a UI have a design-system gallery that builds and opens, covers the tokens and
+    components in use, and has screenshot tests run by `acceptance` or CI (n.a. without a UI).
+12. CI runs `verify.sh` (or the same commands) on pull requests (standard: offered; strict: required).
+13. `.claude/harness/VERSION` matches the plugin version; if older, list the upgrades from `CHANGELOG.md`.
