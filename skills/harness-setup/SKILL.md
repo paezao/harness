@@ -21,6 +21,9 @@ the first install so you can explain choices to the developer.
   Read `.claude/harness/VERSION` (missing means 0.1.0) and compare it with this plugin's version in
   `../../.claude-plugin/plugin.json` (relative to this skill); if older, apply the **Upgrade** steps of each newer entry in
   `../../CHANGELOG.md`, oldest first.
+  In a project that already has the harness, change `.claude/hooks/`, `.claude/harness/` and
+  `.claude/settings.json` with the Write and Edit tools, which ask the developer to approve each
+  file. `guard.sh` blocks shell writes (`cp`, `mv`, redirects) to those paths.
 
 ## Step 1 - Inspect the project (no questions yet)
 
@@ -57,11 +60,12 @@ Use one AskUserQuestion call with at most these questions; skip any you can answ
 | `/learn` skill + decisions ledger | yes | yes | yes |
 | `/mock` skill (mock-first iteration) | yes | yes | yes |
 | Agents: `explorer`, `researcher`, `prototyper`, `checker` | yes | yes | yes |
-| `commit-gate.sh` (no receipt, no commit) | - | yes | yes |
+| `commit.sh` + `commit-gate.sh` (no receipt, no commit) | - | yes | yes |
 | `/contract` + `/ship` skills | - | yes | yes |
 | Agents: `architect`, `implementer`, `skeptic` | - | yes | yes |
 | Agents: `designer`, `design-skeptic` (only if the project has a UI) | - | yes | yes |
-| `/ship` refuses to commit without a verifier PASS | - | - | yes |
+| `review.sh` (the verifier records its verdict) | - | yes | yes |
+| `commit.sh` refuses to commit without a recorded verifier PASS | - | - | yes |
 | CI job runs `verify.sh` | - | offered | yes |
 
 ## Step 3 - Generate files
@@ -76,6 +80,8 @@ CLAUDE.md                        # short index (templates/CLAUDE.md), <= ~80 lin
     acceptance                   # one command per line, run in order
     formatters                   # glob -> formatter command, used by format-on-edit
     lib.sh  verify.sh
+    commit.sh  review.sh         # the only way agents commit; where verifiers record a verdict
+    profile                      # light | standard | strict, read by commit.sh
     VERSION                      # harness version this project is on (from plugin.json)
   hooks/
     guard.sh  commit-gate.sh  format-on-edit.sh
@@ -123,7 +129,15 @@ Rules for generating:
 - **Only real commands.** Every command in `CLAUDE.md`, `acceptance`, and `permissions.allow` must be
   one you saw defined or ran successfully. No invented scripts.
 - **Allow rules are narrow**: `Bash(npm run test:*)`, not `Bash(npm:*)`. Always include
-  `Bash(bash .claude/harness/verify.sh)`.
+  `Bash(bash .claude/harness/verify.sh)`. Do not allow-list `commit.sh` unless the developer asks:
+  commits should keep prompting the way `git commit` did.
+- **Hooks cover both shells.** Keep the `Bash|PowerShell` matcher on every platform. On Windows,
+  Claude Code also has a PowerShell tool, and a matcher of just `Bash` lets it skip the guard and the gate.
+- **The harness protects itself.** Keep the template's `ask` rules for `.claude/hooks/`,
+  `.claude/harness/` and the settings files, and the `Edit(./.claude/receipts/**)` deny rule. With
+  them, a change to what checks the work needs the developer's approval, and nobody edits a receipt.
+- **Profile.** Write the chosen profile (`light`, `standard` or `strict`) as one word to
+  `.claude/harness/profile`. `commit.sh` reads it: in `strict` it needs a recorded review PASS.
 - **Deny secrets** found in step 1 with `Read(...)` deny rules. Note that `Read(./.env.*)` also hides
   `.env.example`; add an explicit allow for it if the project relies on it.
 - Fill `formatters` only with formatters the project already uses. Empty is fine.
@@ -143,8 +157,9 @@ Rules for generating:
   checkouts with `core.autocrlf` turn the scripts into CRLF and bash fails on them.
 - Seed `.claude/rules/` with 1-3 short files of things you actually learned that are non-obvious
   (e.g. "tests need the DB container: `docker compose up -d db`"). No generic advice.
-- `light` profile: skip `commit-gate.sh` and its hook entry, `skills/contract`, `skills/ship`, and the
-  `architect`, `implementer`, `designer`, `skeptic` and `design-skeptic` agents.
+- `light` profile: skip `commit-gate.sh` and its hook entry, `commit.sh`, `review.sh` and its allow
+  rule, `skills/contract`, `skills/ship`, and the `architect`, `implementer`, `designer`, `skeptic`
+  and `design-skeptic` agents. Drop the `commit.sh` sentence from `CLAUDE.md`.
 - `strict` profile: in `skills/ship/SKILL.md` keep the "strict" block; in other profiles delete it.
 - Install the chosen recommended skills per the catalog's instructions (plugin install command,
   or copy into `.claude/skills/`). If a skill is only available to the current user, list it in
@@ -157,9 +172,16 @@ Do all of these and report results honestly:
 1. `bash .claude/harness/verify.sh` passes and writes `.claude/receipts/latest.md`.
 2. Every JSON file you wrote parses.
 3. Hooks behave: pipe sample payloads into each script and check exit codes, e.g.
-   `printf '{"tool_input":{"command":"git push --force origin main"}}' | bash .claude/hooks/guard.sh; echo $?` -> 2.
-   For the commit gate: no receipt -> 2; fresh receipt -> 0; edit a file -> 2 again.
-4. `CLAUDE.md` is under ~80 lines and every path it mentions exists.
+   `printf '{"tool_input":{"command":"git push --force origin feat"}}' | bash .claude/hooks/guard.sh; echo $?` -> 2,
+   and the same phrase only in a `"description"` field -> 0.
+   For the commit gate, pipe payloads the same way (do not run the commands): a payload whose command
+   is `git commit -m x` -> 2; one whose command is `bash .claude/harness/commit.sh -m x` -> 0.
+4. `commit.sh` refuses when it should. If no receipt exists yet, run `bash .claude/harness/commit.sh -m x`
+   before step 1: it must exit 1 with "no change receipt" and stage nothing. Do not run it with a
+   passing receipt here; that would commit the developer's work.
+5. `.claude/harness/profile` holds the chosen profile, and `settings.json` has the `Bash|PowerShell`
+   matcher and the `ask` and `deny` rules for the harness's own files.
+6. `CLAUDE.md` is under ~80 lines and every path it mentions exists.
 
 ## Step 5 - Hand over
 
@@ -168,7 +190,14 @@ Tell the developer, briefly:
 - What was created or merged (list files), and the profile.
 - The day-to-day loop: `/mock` when the feature's shape is uncertain -> `/contract` for multi-file
   work -> work in a worktree -> `/ship`. After any agent mistake: `/learn`.
-- That hooks apply only to Claude Code sessions; humans committing directly are not gated.
+- That Claude commits with `bash .claude/harness/commit.sh` (same arguments as `git commit`), which
+  commits everything that was verified, so there are no partial commits.
+- What the hooks do not cover: humans committing directly, rebase and `git am`, git aliases, and
+  anything run from inside a script file. They stop accidents and skipped steps, not an agent that
+  sets out to cheat. CI running `verify.sh` is the backstop.
+- That new hooks and matchers load when a Claude Code session starts, so open sessions need a restart.
+- That a git worktree only contains the harness once the harness is committed. Until then `/ship`
+  in a worktree fails, so recommend committing it now.
 - Anything you could not set up (failing commands, missing formatter, skills not installable).
 
 Do not commit the harness unless asked. Suggest a commit message if they want one.

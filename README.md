@@ -32,7 +32,7 @@ objective check. The harness targets those causes directly:
 |---|---|
 | Claude builds something, and only then you find out it's not what you wanted | `/mock` shows you a quick fake version first, so you can steer it cheaply |
 | Small requests sprawl into unrelated refactors | `/contract` fixes the scope up front; going outside it means asking first |
-| "Done" means Claude says it's done | Tests must pass on the exact files being committed, or the commit is blocked |
+| "Done" means Claude says it's done | Tests must pass on exactly the files in the commit, or there is no commit |
 | The same model reviews its own work | A separate reviewer with a fresh context looks for what's wrong |
 | Force-pushes, `reset --hard`, reading `.env` are one bad command away | Blocked by permissions and a guard hook before they run |
 | Claude guesses commands and conventions differently each session | They're written down once, from what the project actually uses |
@@ -45,6 +45,9 @@ smaller and more reviewable PRs, and the same workflow in every repo.
 What it is **not**:
 
 - **Not a replacement** for CI, security scanning, or human code review. It makes what reaches them better.
+- **Not a sandbox.** The hooks stop accidents and skipped steps: a forgotten test run, a commit of
+  half the files, a force-push typed from habit. They do not stop an agent that sets out to cheat.
+  See [what the hooks cover](#what-the-hooks-cover).
 - **Not a framework you're locked into.** It's markdown, JSON and a few bash scripts in your repo;
   edit or delete anything.
 - **Not heavyweight by default.** Small fixes skip straight to building, and the `light` profile
@@ -129,7 +132,7 @@ flowchart TD
     verify -- "Fail" --> implement
     verify -- "Pass: receipt written" --> skeptic{"skeptic subagent<br/>fresh-context review"}
     skeptic -- "BLOCK" --> implement
-    skeptic -- "PASS" --> gate{"commit-gate.sh<br/>receipt matches tree?"}
+    skeptic -- "PASS" --> gate{"commit.sh<br/>receipt matches tree?"}
     gate -- "No: tree changed" --> verify
     gate -- "Yes" --> commit[Commit]
     commit --> pr["PR + CI<br/>verify.sh, security scan, human review"]
@@ -160,25 +163,46 @@ Purple steps are skills, red diamonds are gates that block on failure, dashed li
 6. **Review** - the `skeptic` (or `design-skeptic` for visual work), on a different model from the
    builder and with read-only tools, reviews the diff against the
    contract and returns PASS or BLOCK.
-7. **Commit gate** - Claude can only commit if a passing receipt matches the current files. Any edit
-   after verifying means verifying again. `/ship` runs steps 5-7 for you.
+7. **Commit gate** - Claude commits with `commit.sh`, which commits exactly the verified files and
+   undoes the commit if anything else got in; plain `git commit` is blocked. Any edit after verifying
+   means verifying again. `/ship` runs steps 5-7 for you.
 8. **PR and CI** - the usual process (CI, security scanning, human review) still applies on top.
 9. **Learn** - when something goes wrong, `/learn` turns it into a test, guardrail, rule or skill, so the
    same mistake doesn't happen twice.
 
 </details>
 
-`light` profile drops the contract, skeptic and commit gate; `strict` makes a skeptic PASS mandatory.
+`light` profile drops the contract, skeptic and commit gate. In `strict`, `commit.sh` refuses to commit
+until the reviewer has recorded a PASS for exactly those files.
+
+### What the hooks cover
+
+The guard and the commit gate run before every command Claude sends through the Bash or PowerShell
+tool. They read the command itself, so a blocked phrase inside a commit message or a search pattern
+does not set them off.
+
+They do not see:
+
+- commands inside a script file that Claude runs;
+- commits made by `git rebase`, `git am` or a git alias;
+- people committing by hand.
+
+And they are honest-agent checks. An agent that sets out to cheat could write a receipt from inside a
+script, or record a review verdict itself. The harness makes that a deliberate act instead of an easy
+mistake: its own files need your approval to change, and the reviewer blocks diffs that touch them.
+For hard limits use Claude Code's sandbox and deny rules, and run `verify.sh` in CI.
 
 ## What it puts in a project
 
 | File | Purpose |
 |---|---|
 | `CLAUDE.md` | Short index: commands, layout, workflow, pointers to rules |
-| `.claude/settings.json` | Narrow allow rules for real dev commands, deny rules for secrets, hooks |
+| `.claude/settings.json` | Narrow allow rules for real dev commands, deny rules for secrets, ask rules for the harness's own files, hooks |
 | `.claude/harness/verify.sh` + `acceptance` | One "am I done?" command; writes a change receipt with a tree fingerprint |
-| `.claude/hooks/commit-gate.sh` | Blocks agent commits unless a passing receipt matches the current tree |
-| `.claude/hooks/guard.sh` | Blocks force-push, `reset --hard`, `rm -rf /`, reading `.env`, … |
+| `.claude/harness/commit.sh` | How Claude commits: only the tree a passing receipt covers, all of it |
+| `.claude/harness/review.sh` | Where the reviewer records PASS or BLOCK for the files it reviewed |
+| `.claude/hooks/commit-gate.sh` | Blocks plain `git commit`, and merges or pulls that would commit unverified files |
+| `.claude/hooks/guard.sh` | Blocks force-push, `reset --hard`, `rm -rf /`, reading `.env`, shell edits to the harness itself, … |
 | `.claude/hooks/format-on-edit.sh` | Runs the project's formatter on each edited file |
 | `.claude/agents/` | The specialist agents above, each with its model, effort and tools |
 | `.claude/skills/{mock,contract,ship,learn}` | `/mock` to explore, `/contract` before work, `/ship` to finish, `/learn` after mistakes |

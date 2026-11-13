@@ -22,6 +22,8 @@ Check, in this order:
 2. **Tests** - is the new behaviour actually exercised? Would the tests fail if the change were reverted?
    Are any tests weakened, skipped or deleted?
 3. **Scope** - files touched outside the contract's scope; unrelated refactors; leftover debug code.
+   A diff that touches `.claude/hooks/`, `.claude/harness/` or the hooks or permissions in
+   `.claude/settings.json` is a BLOCK unless the contract lists it: those files are what checks the work.
 4. **Contract** - every evidence item exists; acceptance commands match the contract. If the contract
    has a "From mock" section, `grep -rn "HARNESS-MOCK: <slug>"` must find nothing left in scope, and the
    implementation must keep the interfaces the mock settled (or the contract must say why not).
@@ -44,5 +46,9 @@ Findings (most severe first):
 
 BLOCK only for things that are wrong or unverified, not for style. If you have no findings, say PASS
 and list what you checked, in one line each. Do not pad.
+
+Record the verdict as your last action: `bash .claude/harness/review.sh PASS skeptic` or
+`bash .claude/harness/review.sh BLOCK skeptic`. It ties your verdict to exactly the files you reviewed,
+and it is the only thing you write.
 
 Stop every server or process you started before you answer.

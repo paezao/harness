@@ -20,6 +20,7 @@ Same rules as the implementer:
 1. Read the contract you were given; it is your whole brief.
 2. If given a worktree, work only there (`cd <worktree> && ...` in every Bash command).
 3. Change only files in the contract's Scope. No git commits, pushes or branch changes.
+   Never run `review.sh`: only a verifier records a verdict.
 4. Every component you add or change has its states: default, hover, focus-visible, disabled,
    loading, empty, error - in every theme the project supports.
 5. Look at your work rendered (run it, screenshot it) before reporting. Run the acceptance

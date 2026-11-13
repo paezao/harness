@@ -15,6 +15,7 @@ You implement exactly one task contract.
 4. Match the surrounding code: naming, comment density, idioms. Write the tests the spec asks for.
 5. Run the acceptance commands until they pass. Never claim a result you did not see in a command's output.
 6. No git commits, pushes, resets or branch changes. The main session ships the work.
+   Never run `review.sh`: only a verifier records a verdict.
 7. Stop and report if the spec is ambiguous, the same step fails twice, or the budget is spent.
    Do not guess and do not work around guardrails.
 

@@ -73,10 +73,22 @@ don't collide, and discarding a bad attempt is free.
 
 Done means the acceptance commands passed **on exactly this tree**. `verify.sh` runs them and writes
 `.claude/receipts/latest.md` with a fingerprint of the working tree (a git tree hash of all tracked
-and untracked, non-ignored files). `commit-gate.sh` blocks `git commit` from Claude unless the
-current tree's fingerprint matches a passing receipt. Any edit after verifying invalidates it.
+and untracked, non-ignored files). Any edit after verifying invalidates it.
+
+Claude commits with `commit.sh`, not `git commit`. It checks the receipt, stages everything, commits,
+and then compares the tree that was really committed with the fingerprint. If they differ - a path
+argument, `--only`, a git hook that rewrote files - it undoes the commit. So a commit holds exactly
+the verified files: no partial commits. To leave a file out, stash it and verify again.
+`commit-gate.sh` blocks the ways around it: plain `git commit`, and merges, cherry-picks, reverts and
+pulls that would create a commit on their own (use `--no-commit`, verify, then `commit.sh`).
+
+`commit.sh` runs in the checkout being committed, so a worktree is judged by its own receipt and
+never by the main checkout's. A worktree only has the harness once the harness is committed.
 
 This is intentionally boring shell + git: no model in the loop, no flakiness from judgment.
+
+What it does not cover: rebase and `git am`, git aliases, commands inside a script file, and people
+committing by hand. Run `verify.sh` in CI as the backstop.
 
 ## 5. Don't let a model grade its own work
 
@@ -89,6 +101,12 @@ Two rules make this work:
 - **The verifier never runs on the worker's model.** Same model, same blind spots.
 - **The verifier gets the contract, never the worker's report.** A report that says "all edge cases
   handled" primes the reviewer to agree. It must read the code fresh.
+
+The verifier records its verdict itself, with `review.sh PASS|BLOCK`, which stores it next to the
+fingerprint of the tree it reviewed. In the `strict` profile `commit.sh` refuses to commit without a
+PASS for exactly that tree, so a skipped review or an edit after the review stops the commit. This
+catches forgetting, not cheating: nothing stops an agent from running `review.sh` itself, which is
+why `/ship` forbids it and the worker agents are told never to.
 
 ## Roles
 
@@ -107,7 +125,7 @@ everything. Defaults (change freely, but change worker/verifier pairs together):
 | Checker | `checker` | Haiku · low | Runs `verify.sh`, reports only failures |
 | Skeptic | `skeptic` | Fable · high + security skill | Tries to break a finished code diff, security included |
 | Design skeptic | `design-skeptic` | Fable · high + design skill | Same for visual work: themes, states, contrast, consistency |
-| Gatekeeper | hooks | no model | Guard, format-on-edit and commit gate on every tool call |
+| Gatekeeper | hooks | no model | Guard and commit gate on every Bash and PowerShell call; format-on-edit on every edit |
 
 Why these defaults:
 - Planning and design judgement go to Opus; well-specified execution goes to Sonnet; lookups and
@@ -128,6 +146,22 @@ model-based gate anyway, Claude Code prompt-based hooks are the place for it, sc
 "Never read .env" in CLAUDE.md is a suggestion. A `Read(./.env)` deny rule is a guarantee. Prefer:
 permissions > hooks > rules text. Allow-list the project's real commands narrowly so the agent is not
 blocked on prompts for routine work (fewer prompts means developers don't switch to skipping permissions).
+
+Three things keep the hooks honest:
+
+- **Both shells.** The hooks match `Bash|PowerShell`. On Windows, Claude Code has a PowerShell tool
+  too, and a hook that only matches `Bash` never sees what it runs.
+- **Only the command.** `guard.sh` and `commit-gate.sh` read the command, split into simple commands,
+  and match the start of each one. A blocked phrase in a commit message, a grep pattern or the
+  tool-call description does not block anything. False alarms teach people to ignore the guard.
+- **The harness protects itself.** `ask` rules make any edit to `.claude/hooks/`, `.claude/harness/`
+  or the settings files go to the developer; receipts cannot be edited at all; `guard.sh` blocks
+  shell writes to all of them. The skeptic also BLOCKs a diff that changes them outside the contract.
+
+Know the limit. Hooks see the command Claude types, not what a script does when it runs. They stop
+accidents and skipped steps - a forgotten test run, half the files committed, a force-push typed from
+habit. They do not stop an agent that sets out to get around them, for example by writing a receipt
+from inside a script. For that, use Claude Code's sandbox and deny rules, and keep CI and human review.
 
 ## 7. Fast feedback (DevEx)
 
@@ -157,13 +191,16 @@ Use this in audit mode; report each as pass / fail / n.a. with one line of evide
 
 1. `CLAUDE.md` exists, is an index (<= ~80 lines), and every command in it runs.
 2. Permissions allow the real dev commands narrowly and deny secrets.
-3. Destructive commands are blocked by hook (`guard.sh`).
+3. Destructive commands are blocked by hook (`guard.sh`), and the PreToolUse matcher is
+   `Bash|PowerShell`, not just `Bash`.
 4. A single verify entry point exists and passes on a clean tree.
-5. Commits from agents are gated on a matching passing receipt (standard+).
+5. Agents commit through `commit.sh`, which commits only a tree with a matching passing receipt, and
+   `commit-gate.sh` blocks plain `git commit` (standard+).
 6. Multi-file work has a contract template and a documented worktree habit (standard+); `/mock` exists
    and no `HARNESS-MOCK` markers are left on the main branch outside a flag/dev-only path.
 7. An independent reviewer subagent exists with read-only tools, on a different model from the worker
-   it reviews (standard+).
+   it reviews, and records its verdict with `review.sh` (standard+). In `strict`,
+   `.claude/harness/profile` says `strict`, so `commit.sh` requires that PASS.
 8. Acceptance commands are deterministic (re-run twice; same result).
 9. Durable state on disk: decisions ledger present and recently used.
 10. Failure loop exists (`/learn`), and `.claude/rules/` has no stale or contradictory rules.
@@ -171,3 +208,6 @@ Use this in audit mode; report each as pass / fail / n.a. with one line of evide
     components in use, and has screenshot tests run by `acceptance` or CI (n.a. without a UI).
 12. CI runs `verify.sh` (or the same commands) on pull requests (standard: offered; strict: required).
 13. `.claude/harness/VERSION` matches the plugin version; if older, list the upgrades from `CHANGELOG.md`.
+14. The harness protects itself: `ask` rules for `.claude/hooks/**`, `.claude/harness/**` and the
+    settings files, a deny rule for edits to `.claude/receipts/**`, and the harness is committed so
+    worktrees contain it.

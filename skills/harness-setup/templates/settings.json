@@ -10,18 +10,26 @@
   "permissions": {
     "allow": [
       "Bash(bash .claude/harness/verify.sh)",
+      "Bash(bash .claude/harness/review.sh:*)",
       "{{ALLOW_RULES}}"
+    ],
+    "ask": [
+      "Edit(./.claude/hooks/**)",
+      "Edit(./.claude/harness/**)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.claude/settings.local.json)"
     ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
+      "Edit(./.claude/receipts/**)",
       "{{DENY_RULES}}"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.sh\"" },
           { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/commit-gate.sh\"" }

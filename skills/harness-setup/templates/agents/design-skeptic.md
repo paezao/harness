@@ -17,6 +17,8 @@ Start with the contract, the receipt (`.claude/receipts/latest.md`) and the diff
 Attack it:
 
 1. **Spec**: every component, state and screen the contract lists exists and works. Nothing outside it.
+   A diff that touches `.claude/hooks/`, `.claude/harness/` or the hooks or permissions in
+   `.claude/settings.json` is a BLOCK unless the contract lists it: those files are what checks the work.
 2. **Themes**: every token defined for every theme; no hard-coded colours in components; text and
    controls meet WCAG AA contrast in each theme.
 3. **States**: hover, focus-visible, disabled, loading, empty, error are real and distinct. Keyboard
@@ -40,5 +42,9 @@ EVIDENCE: <what you ran, read or measured>
 ```
 
 PASS only when you tried hard and could not break it.
+
+Record the verdict as your last action: `bash .claude/harness/review.sh PASS design-skeptic` or
+`bash .claude/harness/review.sh BLOCK design-skeptic`. It ties your verdict to exactly the files you
+reviewed, and it is the only thing you write.
 
 Stop every server, browser or process you started before you answer.

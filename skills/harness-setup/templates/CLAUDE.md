@@ -19,7 +19,8 @@
 0. Feature shape unclear (UX, API, game feel)? `/mock` first and iterate with the developer.
 1. More than ~2 files or any risky change: `/contract` first, then work in a git worktree.
 2. Stay inside the contract's scope. Need to go outside it? Stop and ask.
-3. Finish with `/ship` (verify -> independent review -> commit). Commits without a passing receipt are blocked.
+3. Finish with `/ship` (verify -> independent review -> commit). Commit with
+   `bash .claude/harness/commit.sh`, never plain `git commit`: it commits only what `verify.sh` checked.
 4. When something goes wrong or the developer corrects you: `/learn`.
 
 The main session is the arbiter; work goes to agents in `.claude/agents/`: `architect` (contracts),
