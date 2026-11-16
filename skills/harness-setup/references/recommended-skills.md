@@ -17,7 +17,7 @@ Install methods:
 |---|---|---|
 | `/code-review` | built-in | Bug-focused review of the current diff; complements `skeptic`. |
 | `/simplify` | built-in | Cleanup pass for reuse and simplification before shipping. |
-| `security-audit` ([cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), MIT) | skills CLI | Security lens for the `skeptic` on every review, and a full multi-phase audit with verified findings when someone asks for one. If it can't be installed, use the built-in `/security-review` instead. |
+| `security-audit` ([cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill), MIT) | skills CLI | Security lens the `skeptic` reads when a change touches a trust boundary (not on every review), and a full multi-phase audit with verified findings when someone asks for one, for example before a release. If it can't be installed, use the built-in `/security-review` instead. |
 | `/fewer-permission-prompts` | built-in | After a week of use, turns common read-only calls into allow rules. |
 | `/run` | built-in | Launch the app and see a change working, not just tests passing. |
 

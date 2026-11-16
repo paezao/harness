@@ -106,7 +106,7 @@ each on the model that suits the job. The one that checks the work is never the 
 | Build | `implementer` | Sonnet | Code changes, strictly inside the contract |
 | Build | `designer` | Opus | Anything visual (only in projects with a UI) |
 | Check | `checker` | Haiku | Runs tests and linters, reports only failures |
-| Check | `skeptic` | Fable | Tries to break code changes, including a security review of each diff |
+| Check | `skeptic` | Fable | Tries to break code changes, with a security review when the change touches a trust boundary |
 | Check | `design-skeptic` | Fable | Tries to break visual changes: themes, states, contrast |
 | Any time | `explorer` | Haiku | "Where/how does this repo do X?" |
 | Any time | `researcher` | Sonnet | Docs, APIs, library versions, with sources |
@@ -204,8 +204,9 @@ For hard limits use Claude Code's sandbox and deny rules, and run `verify.sh` in
 | `.claude/hooks/commit-gate.sh` | Blocks plain `git commit`, and merges or pulls that would commit unverified files |
 | `.claude/hooks/guard.sh` | Blocks force-push, `reset --hard`, `rm -rf /`, reading `.env`, shell edits to the harness itself, … |
 | `.claude/hooks/format-on-edit.sh` | Runs the project's formatter on each edited file |
-| `.claude/agents/` | The specialist agents above, each with its model, effort and tools |
+| `.claude/agents/` | The specialist agents above, each with its model, effort and tools, all in one layout |
 | `.claude/skills/{mock,contract,ship,learn}` | `/mock` to explore, `/contract` before work, `/ship` to finish, `/learn` after mistakes |
+| `.claude/templates/` | The blank for every file written by hand: a new agent, a contract, mock notes, a rule |
 | `.claude/mocks/` | Mock notes: decisions, settled interfaces, what is still faked |
 | `.claude/rules/`, `.claude/state/decisions.md` | Topic rules and the why behind them |
 | `.claude/harness/VERSION` | Which harness version the project is on, so audits know what to upgrade |
@@ -221,6 +222,9 @@ Profiles: `light`, `standard` (default), `strict`. See [SKILL.md](skills/harness
   audit checklist.
 - **Stack detection:** [detection.md](skills/harness-setup/references/detection.md).
 - **Templates:** everything copied into projects is under `skills/harness-setup/templates/`.
+- **Your own agents:** in a project, copy `.claude/templates/agent.md` to `.claude/agents/<name>.md`
+  and follow the checklist at the bottom of the file. Every kind of file has one layout, described in
+  [practices.md](skills/harness-setup/references/practices.md#9-one-layout-per-kind-of-file).
 - **Your own fork:** to keep a team catalog, fork this repo, edit it, and change the marketplace repo in
   [templates/settings.json](skills/harness-setup/templates/settings.json) to your fork.
 

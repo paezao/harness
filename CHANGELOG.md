@@ -4,6 +4,45 @@ Each installed harness records its version in `.claude/harness/VERSION`. Audit m
 applies the **Upgrade** steps of every newer entry below, oldest first, showing a diff for any file
 the team has edited.
 
+## 0.5.0
+
+One layout per kind of file, and a blank for each one people write by hand.
+
+- **`.claude/templates/`** holds `agent.md`, `contract.md`, `mock.md` and `rule.md`. The contract
+  blank moved there from `.claude/contracts/TEMPLATE.md`; the mock notes blank moved out of `/mock`.
+- **Agent template.** `templates/agent.md` is the starting point for a project-specific agent, with
+  a checklist (tools, model, worker/verifier pairing, where to register it). `/learn` can now end in
+  a new agent.
+- **Agents share one layout:** frontmatter, one paragraph on the role, then `## Input`, `## Steps`,
+  `## Rules`, `## Return`. Every agent returns a fixed block of fields. Instructions were regrouped,
+  not rewritten.
+- **The two reviewers return the same block:** `VERDICT`, `FINDINGS` with `[BLOCK|WARN]`, `CHECKED`.
+  The design-skeptic can now report a WARN, which `/ship` already handles.
+- **Skills share one layout:** `## Steps` and `## Rules`.
+- **Records share one layout:** `# Kind: title`, header fields with `status:` first and `date:`
+  second, then sections. Receipts are now titled `# Receipt: verify` and `# Receipt: review` and use
+  `date:` where they had `time:`.
+- `practices.md` section 9 documents the layouts and what each record is for.
+- **Security review only when it applies.** The `skeptic` no longer preloads the security skill or
+  reviews security on every diff. It does so when the contract says `security: review` (a new header
+  field the `architect` fills), when the diff touches one of the project's sensitive paths, or when
+  the diff crosses a trust boundary. Its report has a `SECURITY:` line saying whether it reviewed
+  and why.
+
+**Upgrade** from 0.4.0 (write harness files with the Write and Edit tools, so the developer approves):
+1. Create `.claude/templates/` with `agent.md`, `mock.md` and `rule.md` from the templates. Move
+   `.claude/contracts/TEMPLATE.md` to `.claude/templates/contract.md`, keeping local edits, and put
+   `status:` above `date:`.
+2. In `.gitignore`, replace the `.claude/contracts/*.md` and `!.claude/contracts/TEMPLATE.md` lines
+   with `.claude/contracts/`.
+3. Refresh the agents and the four skills from the templates, keeping local edits and filled
+   placeholders. For an agent the project added itself, regroup it into the four sections.
+   In `skeptic.md`, remove the `skills:` block and fill `{{SECURITY_SKILL_PATH}}` and
+   `{{SECURITY_PATHS}}`. Add the `security:` line to `.claude/templates/contract.md`.
+4. Replace `.claude/harness/verify.sh` and `review.sh` with the templates.
+5. Add the templates line to `CLAUDE.md` and the format line to the top of `.claude/state/decisions.md`.
+6. Write `.claude/harness/VERSION`.
+
 ## 0.4.0
 
 Enforcement fixes. Each one has a test in `tests/run.sh`.

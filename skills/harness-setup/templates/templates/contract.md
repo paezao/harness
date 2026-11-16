@@ -1,9 +1,10 @@
 # Contract: <title>
 
-date: YYYY-MM-DD
 status: draft | agreed | done | abandoned
+date: YYYY-MM-DD
 worker: implementer | designer
 verifier: skeptic | design-skeptic
+security: review | skip - <why, in a few words>
 
 ## Goal
 <one sentence: the outcome, not the implementation>

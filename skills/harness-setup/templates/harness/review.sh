@@ -19,11 +19,12 @@ cd "$root" || exit 1
 
 mkdir -p .claude/receipts
 {
-  echo "# Review receipt"
+  # commit.sh reads the verdict and fingerprint lines, so keep them as they are.
+  echo "# Receipt: review"
   echo
   echo "verdict: $verdict"
   echo "fingerprint: $(harness_fingerprint)"
+  echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "reviewer: ${2:--}"
-  echo "time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } > .claude/receipts/review.md
 echo "review: $verdict recorded for the current tree"

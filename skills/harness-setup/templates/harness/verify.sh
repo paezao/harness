@@ -36,12 +36,16 @@ done < "$acceptance"
 fingerprint=$(harness_fingerprint)
 
 {
-  echo "# Change receipt"
+  # Same layout as the other records: title, header fields, then sections.
+  # commit.sh reads the status and fingerprint lines, so keep them as they are.
+  echo "# Receipt: verify"
   echo
   echo "status: $status"
   [ "$status" = pass ] && echo "fingerprint: $fingerprint"
-  echo "time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '-')"
+  echo
+  echo "## Commands"
   echo
   echo "| command | result | time |"
   echo "|---|---|---|"

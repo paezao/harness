@@ -90,10 +90,12 @@ CLAUDE.md                        # short index (templates/CLAUDE.md), <= ~80 lin
     implementer.md  designer.md  checker.md  skeptic.md  design-skeptic.md
   skills/mock/SKILL.md  skills/contract/SKILL.md  skills/ship/SKILL.md  skills/learn/SKILL.md
   rules/                         # topic rules; start with what you learned in step 1
+  templates/                     # the blank for every file people or agents write by hand
+    agent.md  contract.md  mock.md  rule.md
   mocks/                         # mock notes: decisions and what is faked (committed)
-  contracts/TEMPLATE.md          # task contracts (instances are gitignored)
+  contracts/                     # task contracts (gitignored)
   state/decisions.md             # decision ledger (committed)
-  receipts/                      # verify output (gitignored)
+  receipts/                      # verify and review output, written by scripts (gitignored)
 .github/workflows/harness-verify.yml   # templates/ci/harness-verify.yml (standard: offered; strict: yes)
 ```
 
@@ -119,13 +121,28 @@ Rules for generating:
     `{{GALLERY_LOCATION}}` with how to open the design-system gallery (Storybook command, `/gallery`
     route, debug scene). If the project has no gallery, write "none yet - the first visual task
     creates one" and tell the user (`references/practices.md#1c-a-design-system-you-can-look-at`).
-  - Fill `{{SECURITY_SKILL}}` in `skeptic` with the installed security skill (`security-audit` from the
-    catalog). If none is installed, delete the `skills:` block; the skeptic still checks security by hand.
+  - **Security review only when it applies.** The `skeptic` does not preload the security skill; it
+    reads it when a change calls for it. Fill `{{SECURITY_SKILL_PATH}}` with the path of the installed
+    security skill's `SKILL.md` (for `security-audit` installed in the project:
+    `.claude/skills/security-audit/SKILL.md`). If none is installed, replace that sentence with
+    "review it by hand". Fill `{{SECURITY_PATHS}}` with the globs where this project keeps its trust
+    boundaries, from what you saw in step 1: auth and session code, request handlers, migrations,
+    CI and deploy config, dependency manifests and lockfiles. Do not put the security skill in the
+    `skills:` frontmatter: that would load all of it into every review.
   - Keep the rule that **a verifier never runs on the same model as the worker it checks**
     (implementer `sonnet` -> skeptic `fable`; designer `opus` -> design-skeptic `fable`). If the team
     changes a model, change the pair together.
   - If an agent name clashes with an existing project agent, keep theirs and prefix ours with the
     project name (e.g. `myapp-implementer`), updating references in the skills.
+  - **Project-specific agents.** If the project has a job none of the nine roles fits (a migration
+    reviewer, a release agent, a data-pipeline checker), offer one; do not invent roles nobody asked
+    for. Write it from `templates/templates/agent.md`, follow the checklist at the bottom of that
+    file, and add it to the agent list in `CLAUDE.md`.
+- **One layout per kind of file** (`references/practices.md#9-one-layout-per-kind-of-file`). Keep
+  the four sections of every agent (Input, Steps, Rules, Return) and the Steps and Rules sections of
+  every skill when you tailor them. Blanks go in `.claude/templates/`, never in `.claude/agents/` or
+  `.claude/rules/`: Claude Code loads every `.md` file in those two folders, so a template there
+  would become an agent or a rule.
 - **Only real commands.** Every command in `CLAUDE.md`, `acceptance`, and `permissions.allow` must be
   one you saw defined or ran successfully. No invented scripts.
 - **Allow rules are narrow**: `Bash(npm run test:*)`, not `Bash(npm:*)`. Always include
@@ -151,12 +168,12 @@ Rules for generating:
   the placeholder line. If the project already has CI, add a `bash .claude/harness/verify.sh` step to it
   instead. Not on GitHub? Give the developer the same steps for their CI.
 - Fill `{{HARNESS_VERSION}}` in `.claude/harness/VERSION` with the `version` from `../../.claude-plugin/plugin.json`.
-- Append to `.gitignore`: `.claude/receipts/`, `.claude/contracts/*.md` with `!.claude/contracts/TEMPLATE.md`,
-  and `.claude/settings.local.json`.
+- Append to `.gitignore`: `.claude/receipts/`, `.claude/contracts/` and `.claude/settings.local.json`.
 - Append to `.gitattributes`: `*.sh text eol=lf` and `.claude/harness/* text eol=lf`. Without it, Windows
   checkouts with `core.autocrlf` turn the scripts into CRLF and bash fails on them.
 - Seed `.claude/rules/` with 1-3 short files of things you actually learned that are non-obvious
-  (e.g. "tests need the DB container: `docker compose up -d db`"). No generic advice.
+  (e.g. "tests need the DB container: `docker compose up -d db`"), in the layout of
+  `templates/templates/rule.md`. No generic advice.
 - `light` profile: skip `commit-gate.sh` and its hook entry, `commit.sh`, `review.sh` and its allow
   rule, `skills/contract`, `skills/ship`, and the `architect`, `implementer`, `designer`, `skeptic`
   and `design-skeptic` agents. Drop the `commit.sh` sentence from `CLAUDE.md`.
@@ -182,6 +199,8 @@ Do all of these and report results honestly:
 5. `.claude/harness/profile` holds the chosen profile, and `settings.json` has the `Bash|PowerShell`
    matcher and the `ask` and `deny` rules for the harness's own files.
 6. `CLAUDE.md` is under ~80 lines and every path it mentions exists.
+7. Layout: every file in `.claude/agents/` has `## Input`, `## Steps`, `## Rules` and `## Return` in
+   that order, and neither `.claude/agents/` nor `.claude/rules/` holds a template file.
 
 ## Step 5 - Hand over
 
@@ -190,6 +209,8 @@ Tell the developer, briefly:
 - What was created or merged (list files), and the profile.
 - The day-to-day loop: `/mock` when the feature's shape is uncertain -> `/contract` for multi-file
   work -> work in a worktree -> `/ship`. After any agent mistake: `/learn`.
+- That `.claude/templates/` holds the blank for each file people write by hand: a new agent, a
+  contract, mock notes, a rule.
 - That Claude commits with `bash .claude/harness/commit.sh` (same arguments as `git commit`), which
   commits everything that was verified, so there are no partial commits.
 - What the hooks do not cover: humans committing directly, rebase and `git am`, git aliases, and

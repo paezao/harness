@@ -428,6 +428,13 @@ expect "strict: no review, no commit" 1 commit -am x
 review BLOCK skeptic >/dev/null 2>&1
 expect "strict: a BLOCK does not unlock the commit" 1 commit -am x
 review PASS skeptic >/dev/null 2>&1
+if [ "$(head -n 1 .claude/receipts/review.md)" = "# Receipt: review" ] \
+   && grep -q '^verdict: PASS$' .claude/receipts/review.md && grep -q '^date: ' .claude/receipts/review.md \
+   && grep -q '^reviewer: skeptic$' .claude/receipts/review.md; then
+  ok "review receipt has the record layout"
+else
+  bad "review receipt has the record layout"
+fi
 echo three > file.txt
 verify >/dev/null 2>&1
 expect "strict: an edit after the review needs a new review" 1 commit -am x
@@ -446,6 +453,14 @@ if grep -q '^status: pass' .claude/receipts/latest.md && grep -q '^fingerprint: 
   ok "verify writes a passing receipt with fingerprint"
 else
   bad "verify writes a passing receipt with fingerprint"
+fi
+if [ "$(head -n 1 .claude/receipts/latest.md)" = "# Receipt: verify" ] \
+   && [ "$(sed -n 3p .claude/receipts/latest.md)" = "status: pass" ] \
+   && grep -q '^date: ' .claude/receipts/latest.md && grep -q '^## Commands$' .claude/receipts/latest.md \
+   && grep -q '^## Diff$' .claude/receipts/latest.md; then
+  ok "verify receipt has the record layout"
+else
+  bad "verify receipt has the record layout"
 fi
 printf 'true\nfalse\ntouch should-not-exist\n' > .claude/harness/acceptance
 expect "verify fails when a command fails" 1 verify
@@ -469,8 +484,101 @@ edit_payload "$repo/other.md" | bash .claude/hooks/format-on-edit.sh
 if [ "$(cat other.md)" = keep ]; then ok "format-on-edit skips unmatched files"; else bad "format-on-edit skips unmatched files"; fi
 expect "format-on-edit never blocks on a missing file" 0 sh -c "printf '%s' '{\"tool_input\":{\"file_path\":\"$repo/nope.txt\"}}' | bash .claude/hooks/format-on-edit.sh"
 
-# --- settings template and JSON files --------------------------------------
+# --- layouts: one shape per kind of file -----------------------------------
 cd "$here/.."
+t=skills/harness-setup/templates
+
+# sections <file>: the level-2 headings, in order, joined by commas
+sections() { grep '^## ' "$1" | sed 's/^## //' | tr '\n' ',' | sed 's/,$//'; }
+# keys <file>: the frontmatter keys, in order, joined by spaces
+keys() { sed -n '2,/^---$/p' "$1" | grep -oE '^[a-z]+:' | tr -d ':' | tr '\n' ' ' | sed 's/ $//'; }
+
+for f in "$t"/agents/*.md "$t"/templates/agent.md; do
+  name=${f#"$t"/}
+  if [ "$(sections "$f")" = "Input,Steps,Rules,Return" ]; then
+    ok "agent layout: $name has Input, Steps, Rules, Return in order"
+  else
+    bad "agent layout: $name has Input, Steps, Rules, Return in order (found: $(sections "$f"))"
+  fi
+  if [[ $(keys "$f") =~ ^name\ description(\ tools)?\ model\ effort(\ skills)?$ ]]; then
+    ok "agent layout: $name frontmatter keys are in order"
+  else
+    bad "agent layout: $name frontmatter keys are in order (found: $(keys "$f"))"
+  fi
+  # The first line after the frontmatter says who the agent is.
+  if sed '1,/^---$/d' "$f" | grep -m1 . | grep -q '^You are the '; then
+    ok "agent layout: $name opens with its role"
+  else
+    bad "agent layout: $name opens with its role"
+  fi
+  if sed -n '/^## Return$/,$p' "$f" | grep -q '^```$'; then
+    ok "agent layout: $name returns a fixed block"
+  else
+    bad "agent layout: $name returns a fixed block"
+  fi
+done
+
+for f in "$t"/skills/*/SKILL.md; do
+  name=${f#"$t"/}
+  if [ "$(sections "$f")" = "Steps,Rules" ]; then
+    ok "skill layout: $name has Steps and Rules"
+  else
+    bad "skill layout: $name has Steps and Rules (found: $(sections "$f"))"
+  fi
+done
+
+for kind in Contract Mock; do
+  f="$t/templates/$(printf '%s' "$kind" | tr '[:upper:]' '[:lower:]').md"
+  if [[ $(sed -n 1p "$f") == "# $kind: "* ]] && [[ $(sed -n 3p "$f") == status:* ]] && [[ $(sed -n 4p "$f") == date:* ]]; then
+    ok "record layout: ${f#"$t"/} starts with title, status, date"
+  else
+    bad "record layout: ${f#"$t"/} starts with title, status, date"
+  fi
+done
+
+for f in agent.md contract.md mock.md rule.md; do
+  check "blank exists: templates/$f" test -f "$t/templates/$f"
+done
+# Claude Code loads every .md in .claude/agents and .claude/rules, so no blank may live there.
+if [ -z "$(find "$t/agents" "$t/contracts" -iname 'TEMPLATE*' 2>/dev/null)" ]; then
+  ok "no blank sits in a folder Claude Code loads"
+else
+  bad "no blank sits in a folder Claude Code loads"
+fi
+missing=""
+for ref in $(grep -rhoE '\.claude/templates/[a-z]+\.md' "$t" skills/harness-setup/SKILL.md README.md | sort -u); do
+  [ -f "$t/templates/${ref##*/}" ] || missing="$missing $ref"
+done
+if [ -z "$missing" ]; then ok "every blank the docs point at exists"; else bad "every blank the docs point at exists (missing:$missing)"; fi
+if grep -rn 'contracts/TEMPLATE\.md' skills README.md >/dev/null 2>&1; then
+  bad "nothing still points at contracts/TEMPLATE.md"
+else
+  ok "nothing still points at contracts/TEMPLATE.md"
+fi
+for f in skeptic.md design-skeptic.md; do
+  if grep -q '^VERDICT: PASS | BLOCK$' "$t/agents/$f" && grep -q '^FINDINGS (most severe first):$' "$t/agents/$f" \
+     && grep -q '^CHECKED:$' "$t/agents/$f" && grep -q 'review\.sh PASS' "$t/agents/$f"; then
+    ok "reviewers share one verdict block: $f"
+  else
+    bad "reviewers share one verdict block: $f"
+  fi
+done
+# Security review is on demand: the skill is read when a change calls for it, never preloaded.
+if sed -n '2,/^---$/p' "$t/agents/skeptic.md" | grep -q '^skills:'; then
+  bad "skeptic does not preload the security skill"
+else
+  ok "skeptic does not preload the security skill"
+fi
+if grep -q 'only when it applies' "$t/agents/skeptic.md" && grep -q '^SECURITY: reviewed | not applicable' "$t/agents/skeptic.md" \
+   && grep -q '{{SECURITY_SKILL_PATH}}' "$t/agents/skeptic.md" && grep -q '{{SECURITY_PATHS}}' "$t/agents/skeptic.md"; then
+  ok "skeptic reviews security only when it applies, and says which"
+else
+  bad "skeptic reviews security only when it applies, and says which"
+fi
+check "contracts say whether security review applies" grep -q '^security: review | skip' "$t/templates/contract.md"
+check "architect fills the security field" grep -q '\*\*Security\*\*: `review`' "$t/agents/architect.md"
+
+# --- settings template and JSON files --------------------------------------
 settings=skills/harness-setup/templates/settings.json
 check "hooks cover the PowerShell tool as well as Bash" grep -q '"matcher": "Bash|PowerShell"' "$settings"
 for rule in 'Edit(./.claude/hooks/**)' 'Edit(./.claude/harness/**)' 'Edit(./.claude/settings.json)' 'Edit(./.claude/receipts/**)'; do

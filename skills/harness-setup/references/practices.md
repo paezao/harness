@@ -108,6 +108,14 @@ PASS for exactly that tree, so a skipped review or an edit after the review stop
 catches forgetting, not cheating: nothing stops an agent from running `review.sh` itself, which is
 why `/ship` forbids it and the worker agents are told never to.
 
+Security review is part of the skeptic's job, but only when it applies: the contract says
+`security: review`, the diff touches one of the project's sensitive paths, or the diff crosses a
+trust boundary (auth, outside input, secrets, other systems, dependencies, CI and deploy config).
+Only then does the skeptic read the security skill. A security pass on a change to a button label
+costs time and tokens and teaches people to skim the findings. The skeptic says on a `SECURITY:`
+line whether it reviewed and why, so a skipped review is visible. A whole-repo audit is a separate
+job that a person asks for, for example before a release.
+
 ## Roles
 
 Each role is a subagent with its own model and effort, chosen for the job rather than one model for
@@ -123,7 +131,7 @@ everything. Defaults (change freely, but change worker/verifier pairs together):
 | Implementer | `implementer` | Sonnet · medium | Executes one code contract |
 | Designer | `designer` | Opus · medium + design skill | Executes one visual contract |
 | Checker | `checker` | Haiku · low | Runs `verify.sh`, reports only failures |
-| Skeptic | `skeptic` | Fable · high + security skill | Tries to break a finished code diff, security included |
+| Skeptic | `skeptic` | Fable · high | Tries to break a finished code diff; reads the security skill only when the change touches a trust boundary |
 | Design skeptic | `design-skeptic` | Fable · high + design skill | Same for visual work: themes, states, contrast, consistency |
 | Gatekeeper | hooks | no model | Guard and commit gate on every Bash and PowerShell call; format-on-edit on every edit |
 
@@ -182,8 +190,41 @@ of preference:
 2. A hook, permission or script that makes it impossible.
 3. A one-line rule in `.claude/rules/` (or CLAUDE.md if it applies everywhere).
 4. A skill, when the fix is a multi-step procedure.
+5. An agent, when the fix is a role that needs its own model, tools or a fresh context.
 
 …and logs the decision in `.claude/state/decisions.md` with date and reason, so rules can be pruned later.
+
+## 9. One layout per kind of file
+
+Everything in the harness is plain Markdown a person can read. That only helps if a reader knows
+where to look, so each kind of file has one layout, and the blank for every file people or agents
+write by hand lives in `.claude/templates/`.
+
+| Kind | Layout | Blank |
+|---|---|---|
+| Agent `.claude/agents/<name>.md` | Frontmatter, one paragraph on the role, then `## Input`, `## Steps`, `## Rules`, `## Return` (a fixed block of fields) | `templates/agent.md` |
+| Skill `.claude/skills/<name>/SKILL.md` | Frontmatter, title, one paragraph on who does what, then `## Steps` (numbered, bold verb first) and `## Rules` | - |
+| Record: contract, mock notes, receipt | `# Kind: title`, header fields (`status:` first, then `date:`), then `##` sections | `templates/contract.md`, `templates/mock.md` |
+| Rule `.claude/rules/<topic>.md` | `# Topic`, one line of scope, then one bullet per rule ending in its why | `templates/rule.md` |
+| Decision `.claude/state/decisions.md` | One line: date, change, because, file | the line at the top of the ledger |
+
+Blanks never go in `.claude/agents/` or `.claude/rules/`: Claude Code loads every `.md` file in
+those folders, so a template there would become an agent or a rule.
+
+The records differ in who writes them and how long they live:
+
+| Record | Written by | Lives | Says |
+|---|---|---|---|
+| Contract `.claude/contracts/` | `architect` | Until the task ships (gitignored) | What was agreed: goal, scope, how done is checked |
+| Mock notes `.claude/mocks/` | Main session and `prototyper` | In git | What was decided while iterating, and what is still fake |
+| Receipt `.claude/receipts/latest.md` | `verify.sh`, never by hand | Until the next verify (gitignored) | These exact files passed these commands |
+| Review receipt `.claude/receipts/review.md` | `review.sh`, run by the verifier | Until the next review (gitignored) | The verifier's verdict on these exact files |
+| Decisions `.claude/state/decisions.md` | `/learn` | In git | Why a rule or guardrail exists |
+
+A receipt is proof about one exact set of files, so a script writes it and nobody edits it; that is
+why it has no blank. `state/` is the opposite: it holds what should outlive the task. What a commit
+was checked against is kept in its message, which `/ship` ends with a "Verified:" line and the
+verifier's verdict.
 
 ## Audit checklist
 
@@ -211,3 +252,5 @@ Use this in audit mode; report each as pass / fail / n.a. with one line of evide
 14. The harness protects itself: `ask` rules for `.claude/hooks/**`, `.claude/harness/**` and the
     settings files, a deny rule for edits to `.claude/receipts/**`, and the harness is committed so
     worktrees contain it.
+15. Layout: every agent has `## Input`, `## Steps`, `## Rules`, `## Return` in that order; the blanks
+    are in `.claude/templates/`; `.claude/agents/` and `.claude/rules/` hold no template files.

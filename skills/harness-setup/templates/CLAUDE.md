@@ -27,6 +27,7 @@ The main session is the arbiter; work goes to agents in `.claude/agents/`: `arch
 `implementer` / `designer` (build), `checker` (runs checks), `skeptic` / `design-skeptic` (review),
 `explorer` (questions about this repo), `researcher` (docs and APIs), `prototyper` (mocks).
 A verifier never sees the worker's report, only the contract.
+New agents, contracts, mock notes and rules start from the blanks in `.claude/templates/`.
 
 ## Rules
 
